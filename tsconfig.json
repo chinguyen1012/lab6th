@@ -1,0 +1,7 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "skipLibCheck": true, // Thêm dòng này nếu gặp lỗi kiểu
+  }
+}
