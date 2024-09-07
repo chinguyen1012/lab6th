@@ -12,6 +12,7 @@ import Pj7 from './page/Project7';
 import Pj8 from './page/Project8';
 import Lab1 from './page/lab1';
 import Lab2 from './page/LAB2_calculator';
+import Lab3 from './page/LAB3_LT';
 
 
 
@@ -30,10 +31,9 @@ export type RootStackParamList = {
   Pj8: undefined;
   Lab1: undefined;
   Lab2: undefined;
-
-
-
+  Lab3: undefined;
 };
+
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -52,7 +52,7 @@ export default function App() {
         <Stack.Screen name="Pj8" component={Pj8} options={{ title: 'PJ8' }} />
         <Stack.Screen name="Lab1" component={Lab1} options={{ title: 'LAB1' }} />
         <Stack.Screen name="Lab2" component={Lab2} options={{ title: 'LAB2' }} />
-
+        <Stack.Screen name="Lab3" component={Lab3} options={{ title: 'LAB3' }} />
 
 
       </Stack.Navigator>
