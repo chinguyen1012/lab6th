@@ -14,6 +14,7 @@ type CategoryItem = {
     title: string;
     imageUrl: string;
 };
+//test
 
 const CategoriesScreen = () => {
     const navigation = useNavigation<CategoriesNavigationProp>();
