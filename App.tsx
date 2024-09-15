@@ -1,61 +1,96 @@
-import * as React from 'react';
+import 'react-native-gesture-handler';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import HomeScreen from './page/home';
-import Pj1 from './page/Project1';
-import Pj2 from './page/Project2';
-import Pj3 from './page/Project3';
-import Pj4 from './page/Project4';
-import Pj5 from './page/Project5';
-import Pj6 from './page/Project6';
-import Pj7 from './page/Project7';
-import Pj8 from './page/Project8';
-import Lab1 from './page/lab1';
-import Lab2 from './page/LAB2_calculator';
-import Lab3 from './page/LAB3_LT';
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator, StackScreenProps } from '@react-navigation/stack';
+import CategoriesScreen from './src/screens/CategoriesScreen';
+import FavoritesScreen from './src/screens/FavoritesScreen';
+import SettingsScreen from './src/screens/SettingsScreen';
+import MealsScreen from './src/screens/MealsScreen';
 
+import LauScreen from './src/screens/LauScreen';
 
-
-
-
-// Định nghĩa kiểu cho các thông số điều hướng
-export type RootStackParamList = {
-  Home: undefined;
-  Pj1: undefined;
-  Pj2: undefined;
-  Pj3: undefined;
-  Pj4: undefined;
-  Pj5: undefined;
-  Pj6: undefined;
-  Pj7: undefined;
-  Pj8: undefined;
-  Lab1: undefined;
-  Lab2: undefined;
-  Lab3: undefined;
+// Định nghĩa kiểu dữ liệu cho tham số
+type RootStackParamList = {
+  Favorites: { favoriteMeals: any[] };
 };
 
+// Stack Navigator cho Meals và Lau
+const Stack = createStackNavigator();
+const MealsStackNavigator = () => (
+  <Stack.Navigator>
+    <Stack.Screen
+      name="Categories"
+      component={CategoriesScreen}
+      options={{ headerShown: false }} // Ẩn tiêu đề của Stack Navigator cho Categories
+    />
+    <Stack.Screen name="Meals" component={MealsScreen} />
+    <Stack.Screen name="Lau" component={LauScreen} />
+  </Stack.Navigator>
+);
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
+// Stack Navigator cho Favorites
+const FavoritesStackNavigator = () => (
+  <Stack.Navigator>
+    <Stack.Screen
+      name="Favorites"
+      component={FavoritesScreen}
+      options={{
+        headerTitle: 'Favorites',
+      }}
+    />
+  </Stack.Navigator>
+);
 
-export default function App() {
+
+// Stack Navigator cho Settings
+const SettingsStackNavigator = () => (
+  <Stack.Navigator>
+    <Stack.Screen
+      name="Settings"
+      component={SettingsScreen}
+      options={{
+        headerTitle: 'Settings', // Hiển thị tiêu đề khi chuyển sang trang cài đặt
+      }}
+    />
+  </Stack.Navigator>
+);
+
+// Tạo Bottom Tab Navigator
+const Tab = createBottomTabNavigator();
+const TabNavigator = () => (
+  <Tab.Navigator
+    initialRouteName="Categories"
+    screenOptions={{
+      tabBarActiveTintColor: 'tomato',
+      tabBarInactiveTintColor: 'gray',
+    }}
+  >
+    <Tab.Screen name="Categories" component={MealsStackNavigator} />
+    <Tab.Screen name="Favorites" component={FavoritesStackNavigator} />
+    <Tab.Screen name="Settings" component={SettingsStackNavigator} />
+  </Tab.Navigator>
+);
+
+// Tạo Drawer Navigator nếu bạn muốn giữ Drawer Navigation
+const Drawer = createDrawerNavigator();
+
+const App = () => {
   return (
+
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Home">
-        <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'Trang chủ' }} />
-        <Stack.Screen name="Pj1" component={Pj1} options={{ title: 'PJ1' }} />
-        <Stack.Screen name="Pj2" component={Pj2} options={{ title: 'PJ2' }} />
-        <Stack.Screen name="Pj3" component={Pj3} options={{ title: 'PJ3' }} />
-        <Stack.Screen name="Pj4" component={Pj4} options={{ title: 'PJ4' }} />
-        <Stack.Screen name="Pj5" component={Pj5} options={{ title: 'PJ5' }} />
-        <Stack.Screen name="Pj6" component={Pj6} options={{ title: 'PJ6' }} />
-        <Stack.Screen name="Pj7" component={Pj7} options={{ title: 'PJ7' }} />
-        <Stack.Screen name="Pj8" component={Pj8} options={{ title: 'PJ8' }} />
-        <Stack.Screen name="Lab1" component={Lab1} options={{ title: 'LAB1' }} />
-        <Stack.Screen name="Lab2" component={Lab2} options={{ title: 'LAB2' }} />
-        <Stack.Screen name="Lab3" component={Lab3} options={{ title: 'LAB3' }} />
+      {/* Nếu bạn muốn giữ Drawer Navigation */}
+      <Drawer.Navigator initialRouteName="Home">
+        <Drawer.Screen name="Home" component={TabNavigator} />
+        <Drawer.Screen name="Favorites" component={FavoritesStackNavigator} />
+        <Drawer.Screen name="Settings" component={SettingsStackNavigator} />
+      </Drawer.Navigator>
 
-
-      </Stack.Navigator>
+      {/* Nếu bạn không cần Drawer Navigation, chỉ sử dụng TabNavigator */}
+      {/* <TabNavigator /> */}
     </NavigationContainer>
   );
-}
+};
+
+export default App;
