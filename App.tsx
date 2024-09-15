@@ -29,7 +29,7 @@ const MealsStackNavigator = () => (
     <Stack.Screen name="Lau" component={LauScreen} />
   </Stack.Navigator>
 );
-
+//okla
 // Stack Navigator cho Favorites
 const FavoritesStackNavigator = () => (
   <Stack.Navigator>
