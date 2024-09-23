@@ -1,0 +1,9 @@
+{
+    "expo": {
+        "name": "YourAppName",
+        "slug": "your-app-slug",
+        "ios": {
+            "bundleIdentifier": "com.yourcompany.yourapp"
+        }
+    }
+}
