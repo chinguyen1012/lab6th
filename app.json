@@ -1,9 +1,13 @@
 {
-    "expo": {
-        "name": "YourAppName",
-        "slug": "your-app-slug",
-        "ios": {
-            "bundleIdentifier": "com.yourcompany.yourapp"
-        }
+  "expo": {
+    "name": "YourAppName",
+    "slug": "your-app-slug",
+    "ios": {
+      "bundleIdentifier": "com.nguyen.testapigg",
+      "googleClientId": "392465888946-vqgg6f0i4m6stgrm86ct3jqsvbr9nt2n.apps.googleusercontent.com"
+    },
+    "android": {
+      "package": "com.testapigg.google"
     }
+  }
 }

@@ -1,42 +1,40 @@
-import React from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Modal, ImageBackground } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
+import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
-import * as AuthSession from 'expo-auth-session';
-
+import Icon from 'react-native-vector-icons/FontAwesome'; // Import Icon
 WebBrowser.maybeCompleteAuthSession();
+import { ActivityIndicator } from 'react-native'; // Import ActivityIndicator
 
 const LoginScreen = ({ navigation }: any) => {
     const { control, handleSubmit } = useForm();
+    const [isModalVisible, setModalVisible] = useState(false);
+    const [email, setEmail] = useState('');
+    const [loading, setLoading] = useState(false); // State for loading
 
-    // OAuth configuration
-    const clientId = '392465888946-u9dm8n26tcnjoke582ktcolenrovql5c.apps.googleusercontent.com';
-    const redirectUri = AuthSession.makeRedirectUri();
+    const [request, response, promptAsync] = Google.useAuthRequest({
+        iosClientId: "YOUR_IOS_CLIENT_ID",
+        webClientId: "YOUR_WEB_CLIENT_ID",
+    });
 
-    // Function to handle form submission and call the login API
     const onSubmit = async (data: any) => {
         try {
-            const queryString = new URLSearchParams({
-                username: data.username,
-                password: data.password
-            }).toString();
-
             const response = await fetch('http://localhost:8000/api/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: queryString,  // Send data as x-www-form-urlencoded
+                body: new URLSearchParams({
+                    username: data.username,
+                    password: data.password,
+                }).toString(),
             });
 
             if (response.ok) {
                 const responseData = await response.json();
-                console.log('API Response:', responseData);
-
                 Alert.alert('Success', `Welcome ${data.username}`);
-
-                // Navigate to the HomeScreen
-                navigation.navigate('Home');
+                navigation.navigate('Home', { user: responseData }); // Truyền thông tin người dùng
             } else {
                 const errorData = await response.json();
                 Alert.alert('Error', errorData.message || 'Invalid username or password');
@@ -47,109 +45,231 @@ const LoginScreen = ({ navigation }: any) => {
         }
     };
 
-    // Function to handle Google login
-    const handleGoogleLogin = async () => {
+    const handleForgotPassword = async () => {
+        if (!email) {
+            Alert.alert('Error', 'Please enter an email address');
+            return;
+        }
+        setLoading(true); // Start loading
+
         try {
-            const authRequest = new AuthSession.AuthRequest({
-                clientId,
-                redirectUri,
-                scopes: ['profile', 'email'],
-                responseType: AuthSession.ResponseType.Token,  // This uses implicit flow to get the token directly
+            const response = await fetch('http://localhost:8000/api/auth/forgot-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email }),
             });
 
-            const discovery = {
-                authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-                tokenEndpoint: 'https://oauth2.googleapis.com/token',
-                revocationEndpoint: 'https://oauth2.googleapis.com/revoke'
-            };
-
-            // Prompt Google login
-            const result = await authRequest.promptAsync(discovery);
-
-            if (result.type === 'success') {
-                const tokenId = result.params.access_token;
-
-                // Send tokenId to backend for verification and login
-                const response = await fetch('https://3f30-171-239-3-156.ngrok-free.app/authgg/google/callback', {
-                    method: 'GET',  // Thay đổi thành GET
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ tokenId }),  // Send Google tokenId to backend
-                });
-
-                if (response.ok) {
-                    const responseData = await response.json();
-                    Alert.alert('Success', 'Logged in with Google!');
-                    navigation.navigate('Home');
-                } else {
-                    const errorData = await response.json();
-                    Alert.alert('Error', errorData.message || 'Failed to log in with Google');
-                }
+            if (response.ok) {
+                Alert.alert('Success', 'A password reset link has been sent to your email.');
+                setModalVisible(false);
             } else {
-                Alert.alert('Error', 'Google login cancelled');
+                const errorData = await response.json();
+                Alert.alert('Error', errorData.message || 'Failed to send password reset email');
             }
         } catch (error) {
-            console.error('Google Login Error:', error);
-            Alert.alert('Error', 'Failed to log in with Google. Please try again later.');
+            console.error('API Error:', error);
+            Alert.alert('Error', 'Failed to send password reset email. Please try again later.');
+        }
+        finally {
+            setLoading(false); // Stop loading
         }
     };
 
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Login</Text>
-            <Controller
-                control={control}
-                name="username"
-                render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Username"
-                        onBlur={onBlur}
-                        onChangeText={onChange}
-                        value={value}
-                    />
-                )}
-            />
-            <Controller
-                control={control}
-                name="password"
-                render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Password"
-                        secureTextEntry
-                        onBlur={onBlur}
-                        onChangeText={onChange}
-                        value={value}
-                    />
-                )}
-            />
-            <Button title="Login" onPress={handleSubmit(onSubmit)} />
-            <Button title="Register" onPress={() => navigation.navigate('Register')} />
-            <Button title="Login with Google" onPress={handleGoogleLogin} />
-        </View>
+        <ImageBackground source={require('../public/bgnt1.jpg')} style={styles.background}>
+            <View style={styles.overlay}>
+                <View style={styles.container}>
+                    <Text style={styles.title}>Login</Text>
+                    <View style={styles.inputContainer}>
+                        <Icon name="user" size={20} color="#333" style={styles.icon} />
+                        <Controller
+                            control={control}
+                            name="username"
+                            render={({ field: { onChange, onBlur, value } }) => (
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Username"
+                                    onBlur={onBlur}
+                                    onChangeText={onChange}
+                                    value={value}
+                                />
+                            )}
+                        />
+                    </View>
+                    <View style={styles.inputContainer}>
+                        <Icon name="lock" size={20} color="#333" style={styles.icon} />
+                        <Controller
+                            control={control}
+                            name="password"
+                            render={({ field: { onChange, onBlur, value } }) => (
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Password"
+                                    secureTextEntry
+                                    onBlur={onBlur}
+                                    onChangeText={onChange}
+                                    value={value}
+                                />
+                            )}
+                        />
+                    </View>
+                    <View style={styles.buttonRow}>
+                        <TouchableOpacity style={[styles.button, styles.loginButton, styles.halfButton]} onPress={handleSubmit(onSubmit)}>
+                            <Text style={styles.buttonText}>Login</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.button, styles.registerButton, styles.halfButton]} onPress={() => navigation.navigate('Register')}>
+                            <Text style={styles.buttonText}>Register</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <TouchableOpacity style={[styles.button, styles.forgotButton]} onPress={() => setModalVisible(true)}>
+                        <Text style={styles.buttonText}>Forgot Password</Text>
+                    </TouchableOpacity>
+
+                    <Modal
+                        animationType="slide"
+                        transparent={true}
+                        visible={isModalVisible}
+                        onRequestClose={() => setModalVisible(false)}
+                    >
+                        <View style={styles.modalContainer}>
+                            <View style={styles.modalContent}>
+                                <Text style={styles.modalTitle}>Reset Password</Text>
+                                <TextInput
+                                    style={styles.modalInput}
+                                    placeholder="Enter your email"
+                                    onChangeText={(text) => setEmail(text)}
+                                    value={email}
+                                />
+                                <TouchableOpacity style={[styles.button, styles.loginButton]} onPress={handleForgotPassword} disabled={loading}>
+                                    {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Send Reset Link</Text>}
+                                </TouchableOpacity>
+                                <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={() => setModalVisible(false)}>
+                                    <Text style={styles.buttonText}>Cancel</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </Modal>
+                </View>
+            </View>
+        </ImageBackground>
     );
 };
 
 const styles = StyleSheet.create({
+    background: {
+        flex: 1,
+        resizeMode: 'cover',
+    },
+    overlay: {
+        flex: 1,
+        backgroundColor: 'rgba(255, 255, 255, 0.5)', // Nền trắng với độ mờ 50%
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     container: {
         flex: 1,
         justifyContent: 'center',
+        alignItems: 'center',
         padding: 20,
     },
+    buttonRow: {
+        flexDirection: 'row',
+        width: '100%',
+        justifyContent: 'space-between',
+    },
+    halfButton: {
+        flex: 1,
+        marginHorizontal: 5,
+    },
+
     title: {
-        fontSize: 24,
+        fontSize: 94,
         marginBottom: 20,
-        textAlign: 'center',
+        color: '#ffff',
+    },
+    modalInput: {
+        width: '100%',
+        height: 40,
+        borderColor: '#ccc',
+        borderWidth: 1,
+        padding: 10,
+        borderRadius: 5,
+        backgroundColor: '#fff',
+        marginBottom: 20,
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 20,
+        backgroundColor: '#fff',
+        borderRadius: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 2,
+        width: '100%',
+    },
+    icon: {
+        padding: 10,
     },
     input: {
+        flex: 1,
         height: 40,
-        borderColor: 'gray',
+        borderColor: '#ccc',
         borderWidth: 1,
-        marginBottom: 20,
         padding: 10,
+        borderRadius: 5,
+        backgroundColor: '#fff',
+    },
+    button: {
+        padding: 10,
+        borderRadius: 5,
+        textAlign: 'center',
+        marginBottom: 10,
+        shadowColor: '#000', // Thêm bóng đổ
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 2, // Thêm độ nổi cho Android
+        width: '100%',
+    },
+    buttonText: {
+        color: 'white',
+        textAlign: 'center',
+    },
+    loginButton: {
+        backgroundColor: '#007bff', // Màu nền cho nút Login
+    },
+    registerButton: {
+        backgroundColor: '#28a745', // Màu nền cho nút Register
+    },
+    forgotButton: {
+
+        backgroundColor: '#ffc107', // Màu nền cho nút Forgot Password
+    },
+    cancelButton: {
+        backgroundColor: '#dc3545', // Màu nền cho nút Cancel
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        width: '80%',
+        backgroundColor: 'white',
+        borderRadius: 10,
+        padding: 20,
+        alignItems: 'center',
+    },
+    modalTitle: {
+        fontSize: 20,
+        marginBottom: 20,
     },
 });
 

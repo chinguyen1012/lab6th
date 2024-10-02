@@ -1,12 +1,29 @@
 
 
+// export type RootStackParamList = {
+//     Login: undefined; // No params expected
+//     Register: undefined; // No params expected
+//     Home: undefined; // No params expected
+//     UserForm: { user?: User; isEdit: boolean; refresh: () => void };
+//     ResetPassword: undefined; // Add ResetPassword to the RootStackParamList
+
+// };
+
 export type RootStackParamList = {
-    Login: undefined; // No params expected
-    Register: undefined; // No params expected
-    Home: undefined; // No params expected
+    Home: undefined;
+    ServiceForm: { service?: Service; isEdit: boolean; refresh: () => void };
+    ServiceDetail: { id: string };
     UserForm: { user?: User; isEdit: boolean; refresh: () => void };
+
+    // Các màn hình khác...
 };
 
+interface Service {
+    id: string;
+    serviceName: string;
+    description: string;
+    price: number;
+}
 export interface User {
     id: string;
     name: string;
